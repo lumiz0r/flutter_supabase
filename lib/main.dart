@@ -64,7 +64,7 @@ class MainApp extends StatelessWidget {
                             onPressed: () async {
                               await supabase.from('tasks').delete().eq('id', task['id']);
                             },
-                            icon: Icon(Icons.delete),
+                            icon: const Icon(Icons.delete),
                           ),
                         ],
                       ),
