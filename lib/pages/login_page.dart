@@ -30,7 +30,7 @@ class _LoginPageState extends State<LoginPage> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Check your email for a login link!')),
+          const SnackBar(content: Text('Mira tu email para loguearte')),
         );
         _emailController.clear();
       }
@@ -41,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
       );
     } catch (error) {
       SnackBar(
-        content: const Text('Unexpected error occurred'),
+        content: const Text('Error inesperado'),
         backgroundColor: Theme.of(context).colorScheme.error,
       );
     } finally {

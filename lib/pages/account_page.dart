@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_supabase/main.dart';
 
 class AccountPage extends StatefulWidget {
-  const AccountPage({super.key});
+  const AccountPage({Key? key});
 
   @override
   _AccountPageState createState() => _AccountPageState();
@@ -11,9 +11,9 @@ class AccountPage extends StatefulWidget {
 
 class _AccountPageState extends State<AccountPage> {
   final _usernameController = TextEditingController();
-  final _websiteController = TextEditingController();
 
   var _loading = true;
+  var _userExists = false; // Add this variable
 
   /// Called once a user id is received within `onAuthenticated()`
   Future<void> _getProfile() async {
@@ -24,18 +24,24 @@ class _AccountPageState extends State<AccountPage> {
     try {
       final userId = supabase.auth.currentUser!.id;
       final data =
-          await supabase.from('profiles').select().eq('id', userId).single();
+          await supabase.from('users').select().eq('userId', userId).single();
       _usernameController.text = (data['username'] ?? '') as String;
-      _websiteController.text = (data['website'] ?? '') as String;
+      setState(() {
+        _userExists = data != null; // Update the userExists variable
+      });
     } on PostgrestException catch (error) {
-      SnackBar(
-        content: Text(error.message),
-        backgroundColor: Theme.of(context).colorScheme.error,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.message),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
     } catch (error) {
-      SnackBar(
-        content: const Text('Unexpected error occurred'),
-        backgroundColor: Theme.of(context).colorScheme.error,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Unexpected error occurred'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
     } finally {
       if (mounted) {
@@ -48,56 +54,60 @@ class _AccountPageState extends State<AccountPage> {
 
   /// Called when user taps `Update` button
   Future<void> _updateProfile() async {
-    setState(() {
-      _loading = true;
-    });
-    final userName = _usernameController.text.trim();
-    final website = _websiteController.text.trim();
-    final user = supabase.auth.currentUser;
-    final updates = {
-      'id': user!.id,
-      'username': userName,
-      'website': website,
-      'updated_at': DateTime.now().toIso8601String(),
-    };
-    try {
-      await supabase.from('profiles').upsert(updates);
-      if (mounted) {
-        const SnackBar(
-          content: Text('Successfully updated profile!'),
-        );
-      }
-    } on PostgrestException catch (error) {
+  setState(() {
+    _loading = true;
+  });
+  final userName = _usernameController.text.trim();
+  final userId = supabase.auth.currentUser!.id;
+
+  final existingUser = await supabase.from('users').select().eq('userId', userId).single();
+  final updates = {
+    'username': userName,
+    'userId': userId,  // Ensure userId is set
+    'created_at': existingUser != null ? existingUser['created_at'] : DateTime.now().toIso8601String(),
+  };
+
+  try {
+    if (existingUser == null) {
+      await supabase.from('users').insert(updates);
+    } else {
+      await supabase.from('users').update(updates).eq('userId', userId);
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Successfully updated profile!'),
+      ),
+    );
+  } on PostgrestException catch (error) {
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(error.message),
         backgroundColor: Theme.of(context).colorScheme.error,
-      );
-    } catch (error) {
-      SnackBar(
-        content: const Text('Unexpected error occurred'),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-        });
-      }
-    }
+      ),
+    );
+  } finally {
+    setState(() {
+      _loading = false;
+    });
   }
+}
 
   Future<void> _signOut() async {
     try {
       await supabase.auth.signOut();
     } on AuthException catch (error) {
-      SnackBar(
-        content: Text(error.message),
-        backgroundColor: Theme.of(context).colorScheme.error,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.message),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
     } catch (error) {
-      SnackBar(
-        content: const Text('Unexpected error occurred'),
-        backgroundColor: Theme.of(context).colorScheme.error,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Unexpected error occurred'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
     } finally {
       if (mounted) {
@@ -115,7 +125,6 @@ class _AccountPageState extends State<AccountPage> {
   @override
   void dispose() {
     _usernameController.dispose();
-    _websiteController.dispose();
     super.dispose();
   }
 
@@ -133,15 +142,16 @@ class _AccountPageState extends State<AccountPage> {
                   decoration: const InputDecoration(labelText: 'User Name'),
                 ),
                 const SizedBox(height: 18),
-                TextFormField(
-                  controller: _websiteController,
-                  decoration: const InputDecoration(labelText: 'Website'),
-                ),
-                const SizedBox(height: 18),
                 ElevatedButton(
                   onPressed: _loading ? null : _updateProfile,
                   child: Text(_loading ? 'Saving...' : 'Update'),
                 ),
+                if (_userExists) // Add this condition
+                  const SizedBox(height: 18),
+                  ElevatedButton(
+                    onPressed: _loading ? null : () => Navigator.pushReplacementNamed(context, '/tasks'),
+                    child: const Text('Go to Tasks'),
+                  ),
                 const SizedBox(height: 18),
                 TextButton(onPressed: _signOut, child: const Text('Sign Out')),
               ],
