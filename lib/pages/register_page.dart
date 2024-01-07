@@ -1,35 +1,40 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_supabase/main.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  _RegisterPageState createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
   bool _isLoading = false;
   bool _redirecting = false;
+
   late final TextEditingController _emailController = TextEditingController();
   late final TextEditingController _passwordController =
       TextEditingController();
+  late final TextEditingController _confirmPasswordController =
+      TextEditingController();
+
   late final StreamSubscription<AuthState> _authStateSubscription;
 
-  Future<void> _signIn() async {
+  Future<void> _signUp() async {
     try {
       setState(() {
         _isLoading = true;
       });
-      await supabase.auth.signInWithPassword(
+      await supabase.auth.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sign in successful!')),
+          const SnackBar(content: Text('Sign up successful!')),
         );
         _emailController.clear();
         _passwordController.clear();
@@ -81,11 +86,19 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign In')),
+      appBar: AppBar(
+        title: const Text('Sign Up'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
         children: [
-          const Text('Sign in with your email and password below'),
+          const Text('Sign up'),
           const SizedBox(height: 18),
           TextFormField(
             controller: _emailController,
@@ -98,9 +111,27 @@ class _LoginPageState extends State<LoginPage> {
             obscureText: true,
           ),
           const SizedBox(height: 18),
+          TextFormField(
+            controller: _confirmPasswordController,
+            decoration: const InputDecoration(labelText: 'Confirm Password'),
+            obscureText: true,
+          ),
+          const SizedBox(height: 18),
+          const SizedBox(height: 18),
           ElevatedButton(
-            onPressed: _isLoading ? null : _signIn,
-            child: Text(_isLoading ? 'Loading' : 'Sign In'),
+            onPressed: _isLoading
+                ? null
+                : () {
+                    if (_passwordController.text ==
+                        _confirmPasswordController.text) {
+                      _signUp();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Passwords do not match')),
+                      );
+                    }
+                  },
+            child: Text(_isLoading ? 'Loading' : 'Sign Up'),
           ),
         ],
       ),

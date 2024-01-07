@@ -11,46 +11,43 @@ class AccountPage extends StatefulWidget {
 
 class _AccountPageState extends State<AccountPage> {
   final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
 
   var _loading = true;
   var _userExists = false; // Add this variable
 
-  /// Called once a user id is received within `onAuthenticated()`
   Future<void> _getProfile() async {
-    setState(() {
-      _loading = true;
-    });
+  setState(() {
+    _loading = true;
+  });
 
-    try {
-      final userId = supabase.auth.currentUser!.id;
-      final data =
-          await supabase.from('users').select().eq('userId', userId).single();
-      _usernameController.text = (data['username'] ?? '') as String;
+  try {
+    final userId = supabase.auth.currentSession!.user.id;
+    final data = await supabase.from('users').select().eq('id', userId).single();
+
+    _usernameController.text = (data  ['username'] ?? '') as String;
+    _emailController.text = (data['email'] ?? '') as String;
+    setState(() {
+      _userExists = true;
+    });
+  } on PostgrestException catch (error) {
+    // Handle exceptions
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(error.message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
+  } finally {
+    if (mounted) {
       setState(() {
-        _userExists = data != null; // Update the userExists variable
+        _loading = false;
       });
-    } on PostgrestException catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.message),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Unexpected error occurred'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-        });
-      }
     }
   }
+}
+
+
 
   /// Called when user taps `Update` button
   Future<void> _updateProfile() async {
@@ -58,21 +55,19 @@ class _AccountPageState extends State<AccountPage> {
     _loading = true;
   });
   final userName = _usernameController.text.trim();
-  final userId = supabase.auth.currentUser!.id;
+  final user = supabase.auth.currentUser;
+  final email = _emailController.text.trim();
 
-  final existingUser = await supabase.from('users').select().eq('userId', userId).single();
   final updates = {
+    'id': user!.id,
     'username': userName,
-    'userId': userId,  // Ensure userId is set
-    'created_at': existingUser != null ? existingUser['created_at'] : DateTime.now().toIso8601String(),
+    'email': email,
+    'updated_at': DateTime.now().toIso8601String(),
   };
 
   try {
-    if (existingUser == null) {
-      await supabase.from('users').insert(updates);
-    } else {
-      await supabase.from('users').update(updates).eq('userId', userId);
-    }
+      await supabase.from('users').upsert(updates);
+    
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Successfully updated profile!'),
@@ -141,6 +136,11 @@ class _AccountPageState extends State<AccountPage> {
                   controller: _usernameController,
                   decoration: const InputDecoration(labelText: 'User Name'),
                 ),
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                ),
+                
                 const SizedBox(height: 18),
                 ElevatedButton(
                   onPressed: _loading ? null : _updateProfile,

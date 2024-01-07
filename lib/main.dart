@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_supabase/pages/account_page.dart';
 import 'package:flutter_supabase/pages/login_page.dart';
+import 'package:flutter_supabase/pages/register_page.dart';
 import 'package:flutter_supabase/pages/splash_page.dart';
 import 'package:flutter_supabase/pages/task_list_page.dart';
 
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
       routes: <String, WidgetBuilder>{
         '/': (_) => const SplashPage(),
         '/login': (_) => const LoginPage(),
+        '/register': (_) => const RegisterPage(), 
         '/account': (_) => const AccountPage(),
         '/tasks': (_) => const TaskListPage(),
       },
