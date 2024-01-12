@@ -11,10 +11,7 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    // _redirect(); // You might still want to use this for automatic redirection
   }
-
-  // Keep the _redirect function if you need automatic redirection
 
   @override
   Widget build(BuildContext context) {
@@ -27,20 +24,20 @@ class _SplashPageState extends State<SplashPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text('Welcome to the App',
-                style: Theme.of(context).textTheme.headline4),
-            SizedBox(height: 50), // Provides space between text and buttons
+                style: Theme.of(context).textTheme.headlineMedium),
+            const SizedBox(height: 50), 
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pushReplacementNamed('/register');
               },
               child: const Text('Register'),
             ),
-            SizedBox(height: 20), // Space between buttons
+            const SizedBox(height: 20), 
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pushReplacementNamed('/login');
               },
-              child: Text('Login'),
+              child: const Text('Login'),
             ),
           ],
         ),
