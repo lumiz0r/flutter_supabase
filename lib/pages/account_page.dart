@@ -17,7 +17,7 @@ class _AccountPageState extends State<AccountPage> {
   String? _avatarUrl;
 
   var _loading = true;
-  var _userExists = false; // Add this variable
+  var _userExists = false; 
 
   Future<void> _getProfile() async {
     setState(() {
@@ -36,7 +36,6 @@ class _AccountPageState extends State<AccountPage> {
         _userExists = true;
       });
     } on PostgrestException catch (error) {
-      // Handle exceptions
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error.message),
@@ -181,7 +180,7 @@ class _AccountPageState extends State<AccountPage> {
                   onPressed: _loading ? null : _updateProfile,
                   child: Text(_loading ? 'Saving...' : 'Update'),
                 ),
-                if (_userExists) // Add this condition
+                if (_userExists)
                   const SizedBox(height: 18),
                 ElevatedButton(
                   onPressed: _loading
