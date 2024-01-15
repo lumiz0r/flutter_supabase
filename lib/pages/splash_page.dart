@@ -17,13 +17,12 @@ class _SplashPageState extends State<SplashPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Welcome'),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Welcome to the App',
+            Text('Welcome to the Task App!',
                 style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 50), 
             ElevatedButton(
